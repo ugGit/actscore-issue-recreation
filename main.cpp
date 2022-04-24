@@ -45,7 +45,7 @@ int main(int argc, char* argv[]){
   const auto t1 = std::chrono::high_resolution_clock::now();
 
   // execute 
-  std::transform(std::execution::par_unseq, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
+  std::transform(std::execution::par, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
   
   // stop crono
   const auto t2 = std::chrono::high_resolution_clock::now();
