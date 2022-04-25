@@ -8,21 +8,12 @@
  */
 
 
-#include <iostream>
 #include <string>
-#include <vector>
-
-
 #include <vector>
 #include <iostream>
 #include <execution>
 #include <algorithm>
-
 #include <chrono>
-
-namespace hana = boost::hana;
-using namespace hana::literals;
-
 
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
