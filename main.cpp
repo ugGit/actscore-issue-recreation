@@ -1,5 +1,3 @@
-#include <boost/hana.hpp>
-
 /** TRACCC library, part of the ACTS project (R&D line)
  *
  * (c) 2021-2022 CERN for the benefit of the ACTS project
@@ -7,13 +5,11 @@
  * Mozilla Public License Version 2.0
  */
 
-
 #include <string>
 #include <vector>
 #include <iostream>
 #include <execution>
 #include <algorithm>
-#include <chrono>
 
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
@@ -39,8 +35,7 @@ int main(int argc, char* argv[]){
   //
   // Run an example to show the C++17 parallel execution policies work
   //
-  const int DSIZE = 2*32*1048576;
-
+  const int DSIZE = 64*1048576;
   // Initialize vectors
   std::vector<float> a(DSIZE);
   std::vector<float> b(DSIZE);
@@ -49,20 +44,10 @@ int main(int argc, char* argv[]){
       a.at(i) = rand()/(float)RAND_MAX;
       b.at(i) = rand()/(float)RAND_MAX;
   }
-
-  // start crono
-  const auto t1 = std::chrono::high_resolution_clock::now();
-
   // execute 
   std::transform(std::execution::par_unseq, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
-  
-  // stop crono
-  const auto t2 = std::chrono::high_resolution_clock::now();
-  const std::chrono::duration<double, std::milli> ms = t2 - t1;
-  
-  std::cout << "Execution time [ms]: " << ms.count() << "\n";
+  // print out some results to verify calculation
   std::cout << "-----------\n";
-
   std::cout << a.at(0) << "\n";
   std::cout << b.at(0) << "\n";
   std::cout << c.at(0) << "\n";
