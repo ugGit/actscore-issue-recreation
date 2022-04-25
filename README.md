@@ -108,3 +108,5 @@ Thread 1 "traccc_stdpar_p" received signal SIGSEGV, Segmentation fault.
 #11 0x00007fffffffd350 in ?? ()
 #12 0x00007ffff7deb08a in _dl_fini () from /lib64/ld-linux-x86-64.so.2
 ```
+
+Based on the error log above, we assume the error is caused by the destruction of a `string`. This can also be confirmed, by commenting the creation of the vector of strings (`std::vector<std::string> vec {"z", "y", "x"};`). If the project is rebuil and run after this modification, it executes correctly again. This works regardless of the code instantiating an Eigen matrix.
