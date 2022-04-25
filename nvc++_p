@@ -31,6 +31,7 @@ is_any_in_args(){
 # declare files to be compiled with nvc++
 NVCPP_DIRS=(
     "TestActsCore.dir"
+    "ActsCore.dir"
 )
 # Prepare compiler args for nvc++ or g++
 if is_any_in_args "${NVCPP_DIRS[@]}"; then

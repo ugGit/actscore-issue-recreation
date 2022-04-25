@@ -1,0 +1,140 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 43530b463..ecc83f940 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -197,6 +197,11 @@ if(NOT MSVC)
+     ei_add_cxx_compiler_flag("-fPIE")
+   endif()
+ 
++  ei_add_cxx_compiler_flag(-Kieee) # NVHPC
++  if(CMAKE_CXX_COMPILER_ID MATCHES "NVHPC|PGI")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wc,--pending_instantiations=0")
++  endif()
++
+   set(CMAKE_REQUIRED_FLAGS "")
+ 
+   option(EIGEN_TEST_SSE2 "Enable/Disable SSE2 in tests/examples" OFF)
+diff --git a/Eigen/src/Core/util/Macros.h b/Eigen/src/Core/util/Macros.h
+index 60dcb4866..3a38f7f73 100644
+--- a/Eigen/src/Core/util/Macros.h
++++ b/Eigen/src/Core/util/Macros.h
+@@ -186,6 +186,13 @@
+   #define EIGEN_COMP_PGI 0
+ #endif
+ 
++/// \internal EIGEN_COMP_NVC set to NVC version if the compiler is ...
++#if defined(__NVCOMPILER)
++  #define EIGEN_COMP_NVC (__NVCOMPILER_MAJOR__*100+__NVCOMPILER_MINOR__)
++#else
++  #define EIGEN_COMP_NVC 0
++#endif
++
+ /// \internal EIGEN_COMP_ARM set to 1 if the compiler is ARM Compiler
+ #if defined(__CC_ARM) || defined(__ARMCC_VERSION)
+   #define EIGEN_COMP_ARM 1
+@@ -245,7 +252,7 @@
+ 
+ 
+ /// \internal EIGEN_GNUC_STRICT set to 1 if the compiler is really GCC and not a compatible compiler (e.g., ICC, clang, mingw, etc.)
+-#if EIGEN_COMP_GNUC && !(EIGEN_COMP_CLANG || EIGEN_COMP_ICC || EIGEN_COMP_CLANGICC || EIGEN_COMP_MINGW || EIGEN_COMP_PGI || EIGEN_COMP_IBM || EIGEN_COMP_ARM || EIGEN_COMP_EMSCRIPTEN || EIGEN_COMP_FCC || EIGEN_COMP_CLANGFCC || EIGEN_COMP_CPE || EIGEN_COMP_CLANGCPE || EIGEN_COMP_LCC)
++#if EIGEN_COMP_GNUC && !(EIGEN_COMP_CLANG || EIGEN_COMP_ICC || EIGEN_COMP_CLANGICC || EIGEN_COMP_MINGW || EIGEN_COMP_PGI || EIGEN_COMP_NVC || EIGEN_COMP_IBM || EIGEN_COMP_ARM || EIGEN_COMP_EMSCRIPTEN || EIGEN_COMP_FCC || EIGEN_COMP_CLANGFCC || EIGEN_COMP_CPE || EIGEN_COMP_CLANGCPE || EIGEN_COMP_LCC)
+   #define EIGEN_COMP_GNUC_STRICT 1
+ #else
+   #define EIGEN_COMP_GNUC_STRICT 0
+diff --git a/bench/btl/generic_bench/utils/utilities.h b/bench/btl/generic_bench/utils/utilities.h
+index d2330d06b..82e86a528 100644
+--- a/bench/btl/generic_bench/utils/utilities.h
++++ b/bench/btl/generic_bench/utils/utilities.h
+@@ -32,6 +32,8 @@
+ # define COMPILER		"KCC" ;
+ # elif defined ( __PGI )
+ # define COMPILER		"pgCC" ;
++# elif defined ( __NVCOMPILER )
++# define COMPILER		"nvc++" ;
+ # else
+ # define COMPILER		"undefined" ;
+ # endif
+diff --git a/cmake/EigenTesting.cmake b/cmake/EigenTesting.cmake
+index 1ddaa1235..bbfbd50d4 100644
+--- a/cmake/EigenTesting.cmake
++++ b/cmake/EigenTesting.cmake
+@@ -442,6 +442,8 @@ macro(ei_get_compilerver VAR)
+       set(${VAR} "${CMAKE_CXX_COMPILER_VERSION}")
+     elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "PGI")
+       set(${VAR} "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
++    elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "NVHPC")
++      set(${VAR} "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+     else()
+     # on all other system we rely on ${CMAKE_CXX_COMPILER}
+     # supporting a "--version" or "/version" flag
+diff --git a/test/array_cwise.cpp b/test/array_cwise.cpp
+index 298351eef..565e2f816 100644
+--- a/test/array_cwise.cpp
++++ b/test/array_cwise.cpp
+@@ -532,12 +532,12 @@ template<typename ArrayType> void array_complex(const ArrayType& m)
+   // msvc complex division is not robust
+   VERIFY((Eigen::isinf)(m4/RealScalar(0)).all());
+ #else
+-#if EIGEN_COMP_CLANG
++#if EIGEN_COMP_CLANG || EIGEN_COMP_PGI || EIGEN_COMP_NVC
+   // clang's complex division is notoriously broken too
+   if((numext::isinf)(m4(0,0)/RealScalar(0))) {
+ #endif
+     VERIFY((Eigen::isinf)(m4/zero).all());
+-#if EIGEN_COMP_CLANG
++#if EIGEN_COMP_CLANG || EIGEN_COMP_PGI || EIGEN_COMP_NVC
+   }
+   else
+   {
+diff --git a/test/eigensolver_complex.cpp b/test/eigensolver_complex.cpp
+index c5373f420..2e823f304 100644
+--- a/test/eigensolver_complex.cpp
++++ b/test/eigensolver_complex.cpp
+@@ -132,6 +132,8 @@ template<typename MatrixType> void eigensolver(const MatrixType& m)
+   }
+ 
+   // regression test for bug 478
++  // TODO: libpgmath does not handle underflowing in complex divides.
++#if !(EIGEN_COMP_PGI || EIGEN_COMP_NVC)
+   {
+     a.setZero();
+     ComplexEigenSolver<MatrixType> ei3(a);
+@@ -139,6 +141,7 @@ template<typename MatrixType> void eigensolver(const MatrixType& m)
+     VERIFY_IS_MUCH_SMALLER_THAN(ei3.eigenvalues().norm(),RealScalar(1));
+     VERIFY((ei3.eigenvectors().transpose()*ei3.eigenvectors().transpose()).eval().isIdentity());
+   }
++#endif
+ }
+ 
+ template<typename MatrixType> void eigensolver_verify_assert(const MatrixType& m)
+diff --git a/test/numext.cpp b/test/numext.cpp
+index ee879c9ac..271a94aa2 100644
+--- a/test/numext.cpp
++++ b/test/numext.cpp
+@@ -193,10 +193,12 @@ struct check_rsqrt_impl<std::complex<T> > {
+     // GCC and MSVC differ in their treatment of 1/(0 + 0i)
+     //   GCC/clang = (inf, nan)
+     //   MSVC = (nan, nan)
++    //   PGI/NVC = (nan, nan)
+     // and 1 / (x + inf i)
+     //   GCC/clang = (0, 0)
+     //   MSVC = (nan, nan)
+-    #if (EIGEN_COMP_GNUC)
++    //   PGI/NVC = (0, 0)
++    #if (EIGEN_COMP_GNUC) && !(EIGEN_COMP_PGI || EIGEN_COMP_NVC)
+     {
+       const int kNumCorners = 20;
+       const ComplexT corners[kNumCorners][2] = {
+diff --git a/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h b/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h
+index 7d8814acf..26c4c017e 100644
+--- a/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h
++++ b/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h
+@@ -60,7 +60,7 @@
+   #define EIGEN_SYCL_LOCAL_MEM_UNSET_OR_OFF 1
+ #endif
+ 
+-#if EIGEN_COMP_CLANG // workaround clang bug (see http://forum.kde.org/viewtopic.php?f=74&t=102653)
++#if EIGEN_COMP_CLANG || EIGEN_COMP_NVC // workaround clang bug (see http://forum.kde.org/viewtopic.php?f=74&t=102653)
+   #define EIGEN_TENSOR_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived) \
+     using Base::operator =; \
+     EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Derived& operator=(const Derived& other) { Base::operator=(other); return *this; } \

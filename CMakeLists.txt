@@ -13,6 +13,7 @@ target_compile_options(TestActsCore PRIVATE -stdpar=gpu)
 target_link_options(TestActsCore PRIVATE -stdpar=gpu)
 
 find_package( Eigen3 REQUIRED )
+target_link_libraries(TestActsCore PUBLIC Eigen3::Eigen)
 
 add_subdirectory( extern/acts )
 target_link_libraries(TestActsCore PUBLIC ActsCore)

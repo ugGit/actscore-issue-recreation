@@ -7,28 +7,46 @@
  * Mozilla Public License Version 2.0
  */
 
+
+#include <iostream>
 #include <string>
+#include <vector>
+
+
 #include <vector>
 #include <iostream>
 #include <execution>
 #include <algorithm>
+
 #include <chrono>
+
+namespace hana = boost::hana;
+using namespace hana::literals;
+
+
+#include <Eigen/Dense>
+using Eigen::MatrixXd;
+ 
 
 int main(int argc, char* argv[]){    
   //
-  // Instantiate a vector of strings, because that causes a seg fault apparantly
+  // Introduces the segmentation fault
   //
   std::vector<std::string> vec {"z", "y", "x"};
   std::cout << vec.at(0) << std::endl;
   
   //
-  // Instantiate only a string, becaus this does not influence the program :')
+  // Using Eigen because this is needed apparantly...
   //
-  std::string s = "mystring";
-  std::cout << s << std::endl;
+  MatrixXd m(2,2);
+  m(0,0) = 3;
+  m(1,0) = 2.5;
+  m(0,1) = -1;
+  m(1,1) = m(1,0) + m(0,1);
+  std::cout << m << std::endl;
 
   //
-  // Run an parallel algorithm using C++17
+  // Run an example to show the C++17 parallel execution policies work
   //
   const int DSIZE = 2*32*1048576;
 
@@ -45,7 +63,7 @@ int main(int argc, char* argv[]){
   const auto t1 = std::chrono::high_resolution_clock::now();
 
   // execute 
-  std::transform(std::execution::par, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
+  std::transform(std::execution::par_unseq, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
   
   // stop crono
   const auto t2 = std::chrono::high_resolution_clock::now();
