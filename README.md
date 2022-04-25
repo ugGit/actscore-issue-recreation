@@ -10,6 +10,11 @@ The issue has been debugged so far in an environment using the following modules
 * boost/1.72.0  
 * eigen/3.4.0
 
+Clone the repo:
+```
+git clone git@github.com:ugGit/actscore-issue-recreation.git
+```
+
 ## Information about the setup
 This project contains the minimal required modules and code to recreate the issue encountered.
 
