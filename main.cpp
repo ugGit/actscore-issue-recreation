@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
       b.at(i) = rand()/(float)RAND_MAX;
   }
   // execute 
-  std::transform(std::execution::par, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
+  std::transform(std::execution::par_unseq, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
   // print out some results to verify calculation
   std::cout << "-----------\n";
   std::cout << a.at(0) << "\n";
