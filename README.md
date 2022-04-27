@@ -62,7 +62,7 @@ We also would like to experiment with different execution policies.
 And we do not have a matrix calculation in the file, so we'd like to remove it. 
 Both changes result in a segmentation fault of the program.
 
-As stated, this is all related to linking a dependency: [ActsCore](https://github.com/acts-project/acts). If the library is not linked in the CMake file, no segmentation fault occurs. This library is required in our real-world project. A first approach to solve this issue was to compile this dependency using `nvc++` instead of `gcc`. This however, fails during the compilation of meta functions. More information and reproduction steps can be found here: https://github.com/ugGit/acts.
+As stated, this is all related to linking a dependency: [ActsCore](https://github.com/acts-project/acts). If the library is not linked in the CMake file, no segmentation fault occurs. This library is required in our real-world project. A first approach to solve this issue was to compile this dependency using `nvc++` instead of `gcc`. This, however, fails during the compilation of meta functions. More information and reproduction steps can be found here: https://github.com/ugGit/acts.
 
 ### First cause: changing the execution policy
 Trying to change the execution policy from `par_unseq` to `par` in `main.cpp` results in a segmentation fault of the program. I.e. replacing:
