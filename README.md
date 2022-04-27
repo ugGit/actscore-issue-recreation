@@ -48,6 +48,8 @@ cmake --build build/ --parallel
 Which should yield the following output:
 ```
 z
+  3  -1
+2.5 1.5
 -----------
 0.840188
 0.394383
@@ -55,8 +57,9 @@ z
 ```
 
 ## Provoking the error
-Trying to change the execution policy from `par_unseq` to `par` in `main.cpp` results in a segmentation fault of the program.
+However, the code in the example does not really reflect reality. We do not have a matrix calculation in the file, so we'd like to remove it. And we also would like to experiment with different execution policies. Both changes result in a segmentation fault of the program.
 
+### First cause: changing the execution policy
 For simplicity, apply the provided patch which changes the execution policy from `par_unseq` to `par` in `main.cpp` using:
 
 ```
@@ -74,35 +77,63 @@ z
 Segmentation fault (core dumped)
 ```
 
+### Second cause: removing the matrix calculation
+Before continuing, the work environment matches the state on the current git main branch (e.g. by executing `git reset`). 
+Then, apply the provided patch which removes the matrix calculation from `main.cpp` using:
+
+```
+git apply provoke_error_remove_matrix.patch
+```
+
+Rebuilding the project and executing the program now yields a segmentation fault after having executed the code otherwise correctly:
+
+```
+z
+-----------
+0.840188
+0.394383
+1.23457
+Segmentation fault (core dumped)
+```
+
+It's maybe noteworthy, that the error changes when switching the parallel execution policy from `std::execution::par` to `std::execution::par_unseq`. After recompiling, we get the following error after correct program execution:
+
+```
+*** Error in `./build/TestActsCore': free(): invalid pointer: 0x00007fc9a4008e80 ***
+======= Backtrace: =========
+/lib64/libc.so.6(+0x81329)[0x7fc9ff6a1329]
+/lib64/libc.so.6(__cxa_finalize+0x9a)[0x7fc9ff65a05a]
+/home/nwachuch/bld6/nvcpp-tests/actscore-issue-recreation/build/_deps/acts-build/lib64/libActsCore.so(+0x8e073)[0x7fca088d1073]
+======= Memory map: ========
+00400000-00478000 r-xp 00000000 08:51 408225910                          /bld6/users/nwachuch/nvcpp-tests/actscore-issue-recreation/build/TestActsCore
+```
+
 A first analysis with the debugger in the original project showed the following backtrace:
 
 ```
-Thread 1 "TestActsCore" received signal SIGSEGV, Segmentation fault.
-0x00000000004133cc in std::__cxx11::basic_string::_M_data ()
-    at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/basic_string.h:195
-195	      { return _M_dataplus._M_p; }
+Thread 1 "traccc_stdpar_p" received signal SIGSEGV, Segmentation fault.
+0x000000000042ab4c in std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > () at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/basic_string.h:187
+187          { return _M_dataplus._M_p; }
 (gdb) backtrace
-#0  0x00000000004133cc in std::__cxx11::basic_string::_M_data ()
-    at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/basic_string.h:195
-#1  0x0000000000413555 in std::__cxx11::basic_string::_M_is_local ()
-    at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/basic_string.h:230
-#2  0x0000000000413595 in std::__cxx11::basic_string::_M_dispose ()
-    at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/basic_string.h:239
-#3  0x0000000000413b95 in std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > () at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/basic_string.h:671
-#4  0x0000000000417255 in std::_Destroy (__pointer=0x7fff92008e80)
-    at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/stl_construct.h:140
-#5  0x00000000004132f2 in __destroy (__first=0x7fff92008e80, __last=0x7fff92008fa0)
-    at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/stl_construct.h:152
-#6  0x000000000041722d in std::_Destroy (__first=0x7fff92008e80, __last=0x7fff92008fa0)
-    at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/stl_construct.h:184
-#7  0x00000000004172b1 in std::_Destroy (__first=0x7fff92008e80, __last=0x7fff92008fa0, 
-    _T55_57457=...) at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/alloc_traits.h:746
-#8  0x00000000004122c1 in std::vector::~vector ()
-    at /bld4/opt/gcc/11.2.0/include/c++/11.2.0/bits/stl_vector.h:680
-#9  0x00007fffeb9e005a in __cxa_finalize () from /lib64/libc.so.6
-#10 0x00007ffff616a913 in __do_global_dtors_aux ()
-   from /home/nwachuch/bld6/nvcpp-tests/tmp33/build/_deps/acts-build/lib64/libActsCore.so
-#11 0x00007fffffffd810 in ?? ()
+#0  0x000000000042ab4c in std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > () at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/basic_string.h:187
+#1  0x000000000042acd5 in std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > () at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/basic_string.h:222
+#2  0x000000000042ad15 in std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > () at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/basic_string.h:231
+#3  0x000000000042b6d5 in std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > () at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/basic_string.h:658
+#4  0x000000000043a515 in std::_Destroy (__pointer=0x7fff92008e80)
+    at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/stl_construct.h:98
+#5  0x0000000000424c32 in __destroy (__first=0x7fff92008e80, __last=0x7fff92008fa0)
+    at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/stl_construct.h:108
+#6  0x000000000043a4ed in std::_Destroy (__first=0x7fff92008e80, __last=0x7fff92008fa0)
+    at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/stl_construct.h:136
+#7  0x000000000043a6f1 in std::_Destroy (__first=0x7fff92008e80, __last=0x7fff92008fa0, 
+    _T51_119482=0x7ffff7485c70 <Acts::binningValueNames>)
+    at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/stl_construct.h:206
+#8  0x000000000041b081 in std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > ()
+    at /bld4/opt/gcc/9.3.0/include/c++/9.3.0/bits/stl_vector.h:677
+#9  0x00007fffebd4d05a in __cxa_finalize () from /usr/lib64/libc.so.6
+#10 0x00007ffff58e8ca3 in __do_global_dtors_aux ()
+   from /home/nwachuch/bld6/traccc/build/_deps/acts-build/lib64/libActsCore.so
+#11 0x00007fffffffd350 in ?? ()
 #12 0x00007ffff7deb08a in _dl_fini () from /lib64/ld-linux-x86-64.so.2
 ```
 
