@@ -58,8 +58,8 @@ z
 
 ## Provoking the error
 However, the code in the example does not really reflect reality. 
-We also would like to experiment with different execution policies. 
-And we do not have a matrix calculation in the file, so we'd like to remove it. 
+We would like to experiment with different execution policies. 
+Also, we do not have a matrix calculation in the file, so we'd like to remove it. 
 Both changes result in a segmentation fault of the program.
 
 As stated, this is all related to linking a dependency: [ActsCore](https://github.com/acts-project/acts). If the library is not linked in the CMake file, no segmentation fault occurs. This library is required in our real-world project. A first approach to solve this issue was to compile this dependency using `nvc++` instead of `gcc`. This, however, fails during the compilation of meta functions. More information and reproduction steps can be found here: https://github.com/ugGit/acts.
@@ -123,14 +123,14 @@ Thread 1 "TestActsCore" received signal SIGSEGV, Segmentation fault.
 
 
 ### Second cause: removing the matrix calculation
-Before continuing, the work environment matches the state on the current git main branch (e.g. by executing `git reset`). 
+Before continuing, the work environment should be reset to match the state on the current git main branch again (e.g. by executing `git reset --hard`). 
 Then, apply the provided patch which removes the matrix calculation from `main.cpp` using:
 
 ```
 git apply provoke_error_remove_matrix.patch
 ```
 
-Rebuilding the project and executing the program now yields a segmentation fault after having executed the code otherwise correctly:
+Rebuilding the project and executing the program now yields a `free(): invalid pointer` error after having executed the code otherwise correctly:
 
 ```
 z
@@ -149,6 +149,8 @@ z
 ...
 ```
 
-Based on the error log above, we assume the error is caused by the destruction of a `string`. This can also be confirmed, by commenting the creation of the vector of strings (`std::vector<std::string> vec {"z", "y", "x"};`). If the project is rebuilt and run after this modification, it executes correctly again. This works regardless of the code instantiating an Eigen matrix.
+## Conclusions so far
 
-One interesting observation made during the research of this issue, is the fact that compiling for `DEBUG` results also in a correct running program without the matrix code in `main.cpp`. I.e. using `cmake -S . -B build -DCMAKE_CXX_COMPILER=$PWD/nvc++_p -DCMAKE_BUILD_TYPE=Debug` for configuration.
+Based on the error log and the debugger output above, we assume the error is caused by the destruction of a `string` within a `vector`. This can also be confirmed, by commenting the creation of the vector of strings (`std::vector<std::string> vec {"z", "y", "x"};`). If the project is rebuilt and run after this modification, it executes correctly again. This works regardless of the code instantiating an Eigen matrix and the execution policy selected.
+
+One interesting observation made during the research of this issue, is the fact that compiling for `DEBUG` results also in a correct running program without the matrix code in `main.cpp` when using `par_unseq` as execution policy. I.e. using `cmake -S . -B build -DCMAKE_CXX_COMPILER=$PWD/nvc++_p -DCMAKE_BUILD_TYPE=Debug` for configuration.
