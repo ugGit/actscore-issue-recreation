@@ -161,3 +161,5 @@ The computation capability of the GPU used is 75, and thus, we took notice of th
 "/home/nwachuch/bld6/nvcpp-tests/actscore-issue-recreation/main.cpp", line 49: warning: Calls to function "std::transform(_EP &&, _FIt1, _FIt1, _FIt2, _FIt3, _BF) [with _EP=const std::execution::parallel_policy &, _FIt1=__gnu_cxx::__normal_iterator<float *, std::vector<float, std::allocator<float>>>, _FIt2=__gnu_cxx::__normal_iterator<float *, std::vector<float, std::allocator<float>>>, _FIt3=__gnu_cxx::__normal_iterator<float *, std::vector<float, std::allocator<float>>>, _BF=struct lambda []]" with execution policy std::execution::par will run sequentially when compiled for a compute capability less than cc70; only std::execution::par_unseq can be run in parallel on such GPUs
     std::transform(std::execution::par, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {
 ```
+
+As stated at the very beginning, the issue only starts appearing, when `ActsCore` is linked. Therefore, not linking it to the executable in the buildsystem solves the issue as well.
