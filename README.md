@@ -154,3 +154,10 @@ z
 Based on the error log and the debugger output above, we assume the error is caused by the destruction of a `string` within a `vector`. This can also be confirmed, by commenting the creation of the vector of strings (`std::vector<std::string> vec {"z", "y", "x"};`). If the project is rebuilt and run after this modification, it executes correctly again. This works regardless of the code instantiating an Eigen matrix and the execution policy selected.
 
 One interesting observation made during the research of this issue, is the fact that compiling for `DEBUG` results also in a correct running program without the matrix code in `main.cpp` when using `par_unseq` as execution policy. I.e. using `cmake -S . -B build -DCMAKE_CXX_COMPILER=$PWD/nvc++_p -DCMAKE_BUILD_TYPE=Debug` for configuration.
+
+An additional possible impact factor might be that the code is only executed in a kernel when using `par_unseq`. Using another execution policy results in the code being executed on the CPU. 
+The computation capability of the GPU used is 75, and thus, we took notice of the following warning but did not investigate it any further:
+```
+"/home/nwachuch/bld6/nvcpp-tests/actscore-issue-recreation/main.cpp", line 49: warning: Calls to function "std::transform(_EP &&, _FIt1, _FIt1, _FIt2, _FIt3, _BF) [with _EP=const std::execution::parallel_policy &, _FIt1=__gnu_cxx::__normal_iterator<float *, std::vector<float, std::allocator<float>>>, _FIt2=__gnu_cxx::__normal_iterator<float *, std::vector<float, std::allocator<float>>>, _FIt3=__gnu_cxx::__normal_iterator<float *, std::vector<float, std::allocator<float>>>, _BF=struct lambda []]" with execution policy std::execution::par will run sequentially when compiled for a compute capability less than cc70; only std::execution::par_unseq can be run in parallel on such GPUs
+    std::transform(std::execution::par, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {
+```
