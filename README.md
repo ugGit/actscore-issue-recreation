@@ -123,7 +123,7 @@ Thread 1 "TestActsCore" received signal SIGSEGV, Segmentation fault.
 
 
 ### Second cause: removing the matrix calculation
-Before continuing, the work environment should be reset to match the state on the current git main branch again (e.g. by executing `git reset --hard`). 
+Before continuing, the work environment should be reset to match the state on the current git main branch again (e.g. by executing `git checkout main.cpp`). 
 Then, apply the provided patch which removes the matrix calculation from `main.cpp` using:
 
 ```
