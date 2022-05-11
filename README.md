@@ -155,6 +155,8 @@ Based on the error log and the debugger output above, we assume the error is cau
 
 One interesting observation made during the research of this issue, is the fact that compiling for `DEBUG` results also in a correct running program without the matrix code in `main.cpp` when using `par_unseq` as execution policy. I.e. using `cmake -S . -B build -DCMAKE_CXX_COMPILER=$PWD/nvc++_p -DCMAKE_BUILD_TYPE=Debug` for configuration.
 
+Another interesting observation is that the project compiles and runs successfully for `multicore` targets.
+
 An additional possible impact factor might be that the code is only executed in a kernel when using `par_unseq`. Using another execution policy results in the code being executed on the CPU. 
 The computation capability of the GPU used is 75, and thus, we took notice of the following warning but did not investigate it any further:
 ```
