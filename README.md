@@ -16,6 +16,8 @@ git clone git@github.com:ugGit/actscore-issue-recreation.git
 ```
 
 ## Information about the setup
+The code has been tested on a Nvidia A6000 and Geforce 2080.
+
 This project contains the minimal required modules and code to recreate the issue encountered.
 
 The code is only an extract of a more complex project. To follow the same procedure as later for production required, only one part will be compiled with the nvc++ compiler, whereas gcc is used for the rest. The dynamic selection of compiler within CMake is not possible. To work around this issue, a switch is built in to the auxiliary script `nvc++_p` which defines the compiler per compilation directory.
