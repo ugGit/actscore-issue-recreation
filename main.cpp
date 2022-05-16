@@ -11,25 +11,12 @@
 #include <execution>
 #include <algorithm>
 
-#include <Eigen/Dense>
-using Eigen::MatrixXd;
-
 int main(int argc, char* argv[]){    
   //
   // Introduces the segmentation fault
   //
   std::vector<std::string> vec {"z", "y", "x"};
   std::cout << vec.at(0) << std::endl;
-  
-  //
-  // Using Eigen because this is needed apparantly...
-  //
-  MatrixXd m(2,2);
-  m(0,0) = 3;
-  m(1,0) = 2.5;
-  m(0,1) = -1;
-  m(1,1) = m(1,0) + m(0,1);
-  std::cout << m << std::endl;
 
   //
   // Run an example to show the C++17 parallel execution policies work
@@ -44,7 +31,7 @@ int main(int argc, char* argv[]){
       b.at(i) = rand()/(float)RAND_MAX;
   }
   // execute 
-  std::transform(std::execution::par_unseq, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
+  std::transform(std::execution::seq, a.begin(), a.end(), b.begin(), c.begin(), [](float x, float y) -> float {return x+y;});
   // print out some results to verify calculation
   std::cout << "-----------\n";
   std::cout << a.at(0) << "\n";

@@ -1,3 +1,8 @@
+### Update 2: Adding the flag `-gpu=managed:intercept` during compilation
+Upon suggestion by Nvidia, the flag `-gpu=managed:intercept` is added during the compilation (the current codebase reflects this change).
+This change, removes the condition to include some random Eigen matrix to run the code successfully with `std::execution::par` and `std::execution::par_unseq`.
+However, `std::execution::seq` does still end in a segmentation fault, which does only occur under the same conditions as before (i.e. a vector of string + linking ActsCore). 
+
 ### Update 1: Change of hardware (May 13)
 The code has initially been tested on a Nvidia GeForce RTX 2080. 
 A few days ago, the a A6000 has been added. 
