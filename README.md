@@ -1,3 +1,9 @@
+### Update 1: Change of hardware (May 13)
+The code has initially been tested on a Nvidia GeForce RTX 2080. 
+A few days ago, the a A6000 has been added. 
+Rerunning the issue on both GPUs yielded slightly different results, i.e. the code runs successfully for `std::execution::par_unseq` AND `std::execution::par`.
+The software versions used in the test remained unchanged, but maybe a driver got updated along the way that caused this favorable outcome.
+
 # Issue recreation
 
 During the quest of testing the parallel execution policies for C++17 Std Algorithms, a segmentation fault appears during the cleanup phase after having executed correctly the main program.
@@ -6,7 +12,7 @@ During the quest of testing the parallel execution policies for C++17 Std Algori
 The issue has been debugged so far in an environment using the following modules, which must be available when during the building phase:
 
 * gcc/11.2.0
-* nvhpc/22.3    
+* nvhpc/22.3 (using CUDA 11.6)   
 * boost/1.72.0  
 * eigen/3.4.0
 
@@ -16,7 +22,7 @@ git clone git@github.com:ugGit/actscore-issue-recreation.git
 ```
 
 ## Information about the setup
-The code has been tested on a Nvidia A6000 and Geforce 2080.
+The code has been tested on a Nvidia GeForce RTX 2080.
 
 This project contains the minimal required modules and code to recreate the issue encountered.
 
