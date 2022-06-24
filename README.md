@@ -5,7 +5,7 @@ However, `std::execution::seq` does still end in a segmentation fault, which doe
 
 ### Update 1: Change of hardware (May 13)
 The code has initially been tested on a Nvidia GeForce RTX 2080. 
-A few days ago, the a A6000 has been added. 
+A few days ago, a A6000 has been added. 
 Rerunning the issue on both GPUs yielded slightly different results, i.e. the code runs successfully for `std::execution::par_unseq` AND `std::execution::par`.
 The software versions used in the test remained unchanged, but maybe a driver got updated along the way that caused this favorable outcome.
 
